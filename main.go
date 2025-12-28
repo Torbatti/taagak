@@ -49,6 +49,9 @@ func main() {
 	//
 	done := make(chan bool, 1)
 
+	//
+	//
+	//
 	go func() {
 		sigch := make(chan os.Signal, 1)
 		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
@@ -57,6 +60,9 @@ func main() {
 		done <- true
 	}()
 
+	//
+	//
+	//
 	go func() {
 
 		cmd_root()
@@ -75,8 +81,7 @@ func cmd_root() {
 	var arg_count int = len(os.Args)
 	if arg_count < 2 {
 		log.Println("usage boilerplate here")
-
-		os.Exit(1)
+		return
 	}
 
 	//
@@ -112,79 +117,149 @@ func cmd_root() {
 	}
 
 	//
+	// extract help and version cmd
+	//
+	var cmd_help bool = true
+	for i := range arg_count {
+		i += 1
+
+		switch strings.ToLower(os.Args[i]) {
+		case "-h", "--help", "help":
+			{
+				cmd_help = true
+			}
+
+		case "-v", "--version", "version":
+			{
+				log.Println("version: ", Version)
+			}
+		}
+	}
+
+	//
 	//
 	//
 	switch strings.ToLower(os.Args[1]) {
-	case "-h", "--help", "help":
-		{
-			log.Println("help")
-		}
-
-	case "-v", "--version", "version":
-		{
-			log.Println("version")
-		}
-
 	case "-s", "--serve", "serve":
-		{
-			cmd_serve()
+		{ // serve [DOMAIN.COM]
+			if cmd_help {
+				// TODO(AABIB): ADD serve HELP TEXT
+				return
+			}
+
+			//
+			// check if DOMAIN IS PROVIDED or not
+			//
+			var http_addr string = ""
+			var https_addr string = ""
+
+			if arg_count >= 3 {
+				if http_addr == "" {
+					http_addr = "0.0.0.0:80"
+				}
+				if https_addr == "" {
+					https_addr = "0.0.0.0:443"
+				}
+			} else {
+				if http_addr == "" {
+					http_addr = "127.0.0.1:8090"
+				}
+			}
+
+			//
+			//
+			// setup sqlite
+			//
+			db, err := sql.Open("sqlite3", "file:taagak.sqlite?_journal=WAL")
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer db.Close()
+
+			return
 		}
 
 	case "superuser":
 		{
-			cmd_superuser()
+			if cmd_help {
+				// TODO(AABIB): ADD superuser HELP TEXT
+				return
+			}
+
+			if arg_count < 3 {
+				// TODO(AABIB): ADD superuser HELP TEXT
+				return
+			}
+
+			switch strings.ToLower(os.Args[2]) {
+			case "-h", "--help", "help":
+				{
+					// TODO(AABIB): ADD superuser HELP TEXT
+				}
+
+			//
+			// superuser create [email] [password] [password]
+			//
+			case "create":
+				{
+					if arg_count != 6 {
+						// TODO(AABIB): ADD superuser create HELP TEXT
+						return
+					}
+
+					log.Println("superuser create")
+				}
+
+			//
+			// superuser update [email] [password] [password]
+			//
+			case "update":
+				{
+					if arg_count != 6 {
+						// TODO(AABIB): ADD superuser update HELP TEXT
+						return
+					}
+					log.Println("superuser update")
+				}
+
+			//
+			// superuser delete [email]
+			//
+			case "delete":
+				{
+					if arg_count != 4 {
+						// TODO(AABIB): ADD superuser delete HELP TEXT
+						return
+					}
+					log.Println("superuser delete")
+				}
+
+			default:
+				{
+					// TODO(AABIB): ADD superuser HELP TEXT
+				}
+
+			}
+
+			return
+		}
+
+	case "-h", "--help", "help":
+		{
+			// TODO(AABIB): ADD root HELP TEXT
+		}
+
+	case "-v", "--version", "version":
+		{
+			// SKIP
 		}
 
 	default:
 		{
 			log.Println("not valid args")
+			// TODO(AABIB): ADD root HELP TEXT
+			return
 		}
-
 	}
 
-}
-
-func cmd_serve() {
-
-	// setup sqlite
-
-	//
-	//
-	//
-	db, err := sql.Open("sqlite3", "file:taagak.sqlite?_journal=WAL")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-}
-
-func cmd_superuser() {
-	switch strings.ToLower(os.Args[2]) {
-	case "-h", "--help", "help":
-		{
-			log.Println("help")
-		}
-
-	case "create":
-		{
-			log.Println("superuser create")
-		}
-
-	case "update":
-		{
-			log.Println("superuser update")
-		}
-
-	case "delete":
-		{
-			log.Println("superuser delete")
-		}
-
-	default:
-		{
-			log.Println("superuser default")
-		}
-
-	}
 }
